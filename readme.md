@@ -1,5 +1,5 @@
-# Supplemental Material User Guide
-### This repository contains data and code to reproduce all the figures in the manuscript titled "Optimization of a Cardiomyocyte Model Illuminates Role of Increased INaL in Repolarization Reserve":
+### Optimization of a Cardiomyocyte Model Illuminates Role of Increased INaL in Repolarization Reserve
+By: Kristin Fullerton, Alexander P. Clark, Trine Krogh-Madsen, David J. Christini
 
 **supercell_ga.py** - Python script containing the classes and functions for the developed genetic algorithm.
 
