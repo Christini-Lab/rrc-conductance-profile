@@ -1,0 +1,5 @@
+slurm*
+*.txt
+*_info.csv
+*.pyc
+__pycache__/*
