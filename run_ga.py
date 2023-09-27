@@ -4,7 +4,7 @@ import os
 from supercell_ga import start_ga
 
 def main():
-    all_individuals = start_ga(pop_size = 5, max_generations=3, path_to_model='./models/', save_data_to=os.environ['save_name'], multithread='yes')
+    all_individuals = start_ga(pop_size = 200, max_generations=100, path_to_model='./models/', upper_bound = 10, lower_bound = 0.1, save_data_to=os.environ['save_name'], multithread='yes')
     return(all_individuals)
 
 if __name__ == '__main__':

@@ -23,8 +23,6 @@ class Ga_Config():
              max_generations,
              params_lower_bound,
              params_upper_bound,
-             iks_lower_bound,
-             iks_upper_bound,
              tunable_parameters,
              mate_probability,
              mutate_probability,
@@ -40,8 +38,6 @@ class Ga_Config():
         self.max_generations = max_generations
         self.params_lower_bound = params_lower_bound
         self.params_upper_bound = params_upper_bound
-        self.iks_lower_bound = iks_lower_bound
-        self.iks_upper_bound = iks_upper_bound
         self.tunable_parameters = tunable_parameters
         self.mate_probability = mate_probability
         self.mutate_probability = mutate_probability
@@ -205,28 +201,16 @@ def _mutate(individual):
     keys = [k for k, v in individual[0].items()]
 
     for key in keys:
-        if key == 'i_ks_multiplier':
-            if random.random() < GA_CONFIG.gene_mutation_probability:
-                new_param = -1
+        if random.random() < GA_CONFIG.gene_mutation_probability:
+            new_param = -1
 
-                while ((new_param < GA_CONFIG.iks_lower_bound) or
-                    (new_param > GA_CONFIG.iks_upper_bound)):
-                    new_param = np.random.normal(
-                            individual[0][key],
-                            individual[0][key] * .1)
+            while ((new_param < GA_CONFIG.params_lower_bound) or
+                (new_param > GA_CONFIG.params_upper_bound)):
+                new_param = np.random.normal(
+                        individual[0][key],
+                        individual[0][key] * .1)
 
-                individual[0][key] = new_param
-        else:
-            if random.random() < GA_CONFIG.gene_mutation_probability:
-                new_param = -1
-
-                while ((new_param < GA_CONFIG.params_lower_bound) or
-                    (new_param > GA_CONFIG.params_upper_bound)):
-                    new_param = np.random.normal(
-                            individual[0][key],
-                            individual[0][key] * .1)
-
-                individual[0][key] = new_param
+            individual[0][key] = new_param
 
 def _evaluate_fitness(ind):
 
@@ -263,16 +247,14 @@ def _evaluate_fitness(ind):
     data = [fitness, RRC, rrc_fitness, str(list(data['t'])), str(list(data['v'])), str(list(data['cai'])), sum(all_feature_errors), sum(all_morph_errors), feature_error, AP_morph_error['error']] + list(ap_features.values()) 
     return data
 
-def start_ga(pop_size=200, max_generations=100, save_data_to = './', path_to_model = './', model = 'tor_ord_endo2.mmt', model_stim = 5.3, model_length = 1, multithread = 'yes', tunable_parameters = ['i_cal_pca_multiplier', 'i_ks_multiplier', 'i_kr_multiplier', 'i_nal_multiplier', 'i_na_multiplier', 'i_to_multiplier', 'i_k1_multiplier', 'i_NCX_multiplier', 'i_nak_multiplier']):
+def start_ga(pop_size=200, max_generations=100, save_data_to = './', path_to_model = './', model = 'tor_ord_endo2.mmt', model_stim = 5.3, model_length = 1, multithread = 'yes', lower_bound = 0.33, upper_bound = 3, tunable_parameters = ['i_cal_pca_multiplier', 'i_ks_multiplier', 'i_kr_multiplier', 'i_nal_multiplier', 'i_na_multiplier', 'i_to_multiplier', 'i_k1_multiplier', 'i_NCX_multiplier', 'i_nak_multiplier']):
 
     # 1. Initializing GA hyperparameters
     global GA_CONFIG
     GA_CONFIG = Ga_Config(population_size=pop_size,
                           max_generations=max_generations,
-                          params_lower_bound=0.33,
-                          params_upper_bound=3,
-                          iks_lower_bound = 0.33,
-                          iks_upper_bound = 3,
+                          params_lower_bound=lower_bound,
+                          params_upper_bound=upper_bound,
                           tunable_parameters= tunable_parameters,
                           mate_probability=0.9,
                           mutate_probability=0.9,
