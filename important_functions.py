@@ -504,7 +504,8 @@ def collect_sensitivity_data(args):
 
     for pur in list(range(0,len(purturb))):
         ind = og_ind.copy()
-        ind[cond[i]] = ind[cond[i]]*purturb[pur]
+        #ind[cond[i]] = ind[cond[i]]*purturb[pur]
+        ind[cond[i]] = purturb[pur]
         print(cond[i], purturb[pur], ind)
         dat_long, IC_long = run_model([ind], 5, prepace = 600, I0 = IC_initial, path = p, model = model, stim=stim, length=length)
         
