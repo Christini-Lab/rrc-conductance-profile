@@ -1,5 +1,5 @@
 slurm*
 *.txt
-*_info.csv
+*_info.csv.bz2
 *.pyc
 __pycache__/*
