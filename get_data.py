@@ -21,7 +21,7 @@ get_data_from = './data/'
 get_robust_data(multiprocessing='yes')
 
 #Robust data for all best data models - IKr & IKb
-get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], i_kb = 0.6, multiprocessing='yes')
+get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], i_kb = 0.6, multiprocessing='yes', save_to = './data/robust_data_ikrkb.csv.bz2')
 
 #Robust data for all best data models - IKr 
-get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], multiprocessing='yes')
+get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], multiprocessing='yes', save_to = './data/robust_data_ikr.csv.bz2')

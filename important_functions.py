@@ -719,7 +719,7 @@ def get_robust_data_old(best_data_path = './data/best_data.csv.bz2', save_to = '
 
     pickle.dump(robust_df, open(save_to, 'wb'))
 
-def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/robust_data_2.csv.bz2', conductance = 'i_cal_pca_multiplier', values = [1, 2, 3, 4, 5, 6, 7, 8], i_kb = 1, multiprocessing = 'no'):
+def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/robust_data_ical.csv.bz2', conductance = 'i_cal_pca_multiplier', values = [1, 2, 3, 4, 5, 6, 7, 8], i_kb = 1, multiprocessing = 'no'):
     """
     This function runs simulations to calculate the change in action potential duraction between the baseline ToR-ORd model and the 220 best GA individuals 
     at difference conductance purturbations. 
