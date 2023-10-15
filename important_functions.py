@@ -407,7 +407,7 @@ def get_sensitivities(all_trials, error):
         pvalues.append(pvalue)
     return sensitivities, pvalues
 
-def check_robustness(best_data, conductance, values, i_kb = 1):
+def check_robustness_old(best_data, conductance, values, i_kb = 1):
     
     all_data = []
 
@@ -429,6 +429,41 @@ def check_robustness(best_data, conductance, values, i_kb = 1):
 
         # best ind
         best_ind = best_data.filter(like = 'multiplier').iloc[0].to_dict()
+        best_ind['i_kb_multiplier'] = i_kb
+        best_ind[conductance] = best_ind[conductance]*value
+        best_dat, best_IC = run_model([best_ind], 1)
+        t_best = best_dat['engine.time']
+        v_best = best_dat['membrane.v']
+        apd90_best = calc_APD(t_best, v_best, 90)
+        data_best = detect_abnormal_ap(t_best, v_best)
+        result_best = data_best['result']
+        all_data.append(dict(zip(labels, [conductance_label, value, t_best, v_best, apd90_best, result_best, 'optimized'])))
+
+    return(all_data)
+
+def check_robustness(args):
+    
+    i, best_data, conductance, values, i_kb = args
+    all_data = []
+
+    for value in values:
+        if i_kb != 1:
+            conductance_label = conductance + ' and i_kb_multiplier'
+        else:
+            conductance_label = conductance
+
+        # baseline torord model 
+        dat, IC = run_model([{conductance: value, 'i_kb_multiplier': i_kb}], 1)
+        t = dat['engine.time']
+        v = dat['membrane.v']
+        apd90 = calc_APD(t, v, 90)
+        data = detect_abnormal_ap(t, v)
+        result = data['result']
+        labels = ['conductance', 'value', 't', 'v', 'apd90', 'result', 'type']
+        all_data.append(dict(zip(labels, [conductance_label, value, t, v, apd90, result, 'torord'])))
+
+        # best ind
+        best_ind = best_data.filter(like = 'multiplier').iloc[i].to_dict()
         best_ind['i_kb_multiplier'] = i_kb
         best_ind[conductance] = best_ind[conductance]*value
         best_dat, best_IC = run_model([best_ind], 1)
@@ -504,8 +539,8 @@ def collect_sensitivity_data(args):
 
     for pur in list(range(0,len(purturb))):
         ind = og_ind.copy()
-        #ind[cond[i]] = ind[cond[i]]*purturb[pur]
-        ind[cond[i]] = purturb[pur]
+        ind[cond[i]] = ind[cond[i]]*purturb[pur] #purturbation as multiplier
+        #ind[cond[i]] = purturb[pur] #purturbation as value
         print(cond[i], purturb[pur], ind)
         dat_long, IC_long = run_model([ind], 5, prepace = 600, I0 = IC_initial, path = p, model = model, stim=stim, length=length)
         
@@ -673,21 +708,61 @@ def get_cond_data(best_data_path = './data/best_data.csv.bz2', save_to = './data
     # SAVE DATA
     pickle.dump({'BM':all_data, 'OM':all_data_o, 'OM1':all_data_0, 'OM2':all_data_1, 'OM3':all_data_0a, 'BM2':all_data_2, 'BM3':all_data_3, 'BM4':all_data_4, 'BM1':all_data_5, 'GBM':all_data_g, 'GBM2':all_data_g2, 'GBM3':all_data_g3, 'GBM4':all_data_g4, 'GBM1':all_data_g5}, open(save_to, 'wb'))
 
-def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/robust_data.pkl'):
+def get_robust_data_old(best_data_path = './data/best_data.csv.bz2', save_to = './data/robust_data.pkl'):
     best_data = pd.read_csv(best_data_path)
-    ical_data = check_robustness(best_data, 'i_cal_pca_multiplier', [1, 2, 3, 4, 5, 6, 7, 8])
-    ikr_kb_data = check_robustness(best_data, 'i_kr_multiplier', [1, 0.8, 0.6, 0.4, 0.2, 0], i_kb = 0.6)
+    ical_data = check_robustness_old(best_data, 'i_cal_pca_multiplier', [1, 2, 3, 4, 5, 6, 7, 8])
+    ikr_kb_data = check_robustness_old(best_data, 'i_kr_multiplier', [1, 0.8, 0.6, 0.4, 0.2, 0], i_kb = 0.6)
     ical_data.extend(ikr_kb_data)
-    ikr_data = check_robustness(best_data, 'i_kr_multiplier', [1, 0.8, 0.6, 0.4, 0.2, 0])
+    ikr_data = check_robustness_old(best_data, 'i_kr_multiplier', [1, 0.8, 0.6, 0.4, 0.2, 0])
     ical_data.extend(ikr_data)
     robust_df = pd.DataFrame(ical_data)
 
     pickle.dump(robust_df, open(save_to, 'wb'))
 
+def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/robust_data_2.csv.bz2', conductance = 'i_cal_pca_multiplier', values = [1, 2, 3, 4, 5, 6, 7, 8], i_kb = 1, multiprocessing = 'no'):
+    """
+    This function runs simulations to calculate the change in action potential duraction between the baseline ToR-ORd model and the 220 best GA individuals 
+    at difference conductance purturbations. 
+    
+    """
+    # LOAD DATA
+    best_data = pd.read_csv(best_data_path) 
+    best_conds = best_data.filter(like = 'multiplier')
+    best_conds.loc[len(best_conds)-1] = [1]*9 # add baseline as last row
+    best_conds = best_conds.sort_index().reset_index(drop=True)
+
+    ##########################################################################################################################################################
+    # RUN SIMULATION
+    print(time.time())
+    time1 = time.time()
+
+    #if __name__ == "__main__":
+
+    index = len(best_conds['i_cal_pca_multiplier'])
+    args = [(i, best_conds, conductance, values, i_kb) for i in range(index)]
+
+    if multiprocessing == 'yes':
+        p = Pool() #allocates for the maximum amount of processers on laptop
+        result = p.map(check_robustness, args) 
+        p.close()
+        p.join()
+    else:
+        result = list(map(check_robustness, args))
+
+    time2 = time.time()
+    print('processing time: ', (time2-time1)/60, ' Minutes')
+    print(time.time())
+
+    ##########################################################################################################################################################
+    # SAVE DATA
+    df_data = pd.DataFrame(result)
+    df_data.to_csv(save_to, index = False)
+
+
 def get_rrc_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/rrc_data.csv.bz2', multiprocessing = 'no'):
     """
     This function runs simulations to calculate the change in action potential duraction between the baseline ToR-ORd model and the 220 best GA individuals 
-    at various stimuli. This data was used to produce Figures 3D and 3E. The data is stored as a csv file contained in the data/ folder and named rrc_data.csv.bz2.
+    at various stimuli. This data was used to produce Figures 3E and 3F. The data is stored as a csv file contained in the data/ folder and named rrc_data.csv.bz2.
     
     """
     # LOAD DATA
