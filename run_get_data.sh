@@ -2,11 +2,11 @@
 
 #SBATCH --partition=panda
 #SBATCH --nodes=1
-#SBATCH --ntasks=8
+#SBATCH --ntasks=32
 #SBATCH --cpus-per-task=1
 #SBATCH --job-name=sen-t
-#SBATCH --time=2:00:00             #HH/MM/SS
-#SBATCH --mem=5G                  #memory requested, units available K,M,G,T
+#SBATCH --time=24:00:00             #HH/MM/SS
+#SBATCH --mem=50G                  #memory requested, units available K,M,G,T
 
 #source ~/ .bashrc
 
