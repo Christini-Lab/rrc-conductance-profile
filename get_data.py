@@ -18,8 +18,9 @@ get_data_from = './data/'
 #get_rrc_data(best_data_path=get_data_from+'best_data.csv.bz2', save_to = save_data_to+'rrc_data.csv.bz2', multiprocessing='yes')
 
 #Robust data for all best data models - ICaL
-get_robust_data(multiprocessing='yes')
+get_robust_data(multiprocessing='no')
 
+#%%
 #Robust data for all best data models - IKr & IKb
 get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], i_kb = 0.6, multiprocessing='yes', save_to = './data/robust_data_ikrkb.csv.bz2')
 

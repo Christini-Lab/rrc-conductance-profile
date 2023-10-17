@@ -466,13 +466,17 @@ def check_robustness(args):
         best_ind = best_data.filter(like = 'multiplier').iloc[i].to_dict()
         best_ind['i_kb_multiplier'] = i_kb
         best_ind[conductance] = best_ind[conductance]*value
-        best_dat, best_IC = run_model([best_ind], 1)
-        t_best = best_dat['engine.time']
-        v_best = best_dat['membrane.v']
-        apd90_best = calc_APD(t_best, v_best, 90)
-        data_best = detect_abnormal_ap(t_best, v_best)
-        result_best = data_best['result']
-        all_data.append(dict(zip(labels, [conductance_label, value, t_best, v_best, apd90_best, result_best, 'optimized'])))
+
+        try:
+            best_dat, best_IC = run_model([best_ind], 1)
+            t_best = best_dat['engine.time']
+            v_best = best_dat['membrane.v']
+            apd90_best = calc_APD(t_best, v_best, 90)
+            data_best = detect_abnormal_ap(t_best, v_best)
+            result_best = data_best['result']
+            all_data.append(dict(zip(labels, [conductance_label, value, t_best, v_best, apd90_best, result_best, 'optimized'+str(i)])))
+        except:
+            all_data.append(dict(zip(labels, [conductance_label, value, 500, 500, 500, 500, 'optimized'+str(i)])))
 
     return(all_data)
 
