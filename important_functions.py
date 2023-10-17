@@ -472,20 +472,23 @@ def check_robustness(args):
             best_dat, best_IC = run_model([best_ind], 1)
             t_best = best_dat['engine.time']
             v_best = best_dat['membrane.v']
-            apd90_best = calc_APD(t_best, v_best, 90)
-            data_best = detect_abnormal_ap(t_best, v_best)
-            result_best = data_best['result']
+            apd90s = []
+            results = []
+            for a in [0, 1, 2, 3, 4]:
+                ap_data = get_last_ap([t_best, v_best], a, type = 'half')
+                apd90s.append(calc_APD(ap_data['t'], ap_data['v'], 90))
+                results.append(detect_abnormal_ap(ap_data['t'], ap_data['v'])['result'])
 
             #save data to existing dict
             all_data['t_'+str(value)] = str(list(t_best))
             all_data['v_'+str(value)] = str(list(v_best))
-            all_data['apd90_'+str(value)] = apd90_best
-            all_data['result_'+str(value)] = result_best
+            all_data['apd90_'+str(value)] = str(apd90s)
+            all_data['result_'+str(value)] = str(results)
         except:
-            all_data['t_'+str(value)] = 500
-            all_data['v_'+str(value)] = 500
-            all_data['apd90_'+str(value)] = 500
-            all_data['result_'+str(value)] = 500
+            all_data['t_'+str(value)] = 2000
+            all_data['v_'+str(value)] = 2000
+            all_data['apd90_'+str(value)] = 2000
+            all_data['result_'+str(value)] = 2000
     return(all_data)
 
 def collect_rrc_data(args):
@@ -768,6 +771,32 @@ def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './da
     ##########################################################################################################################################################
     # SAVE DATA
     df_data = pd.DataFrame(result)
+
+    ##########################################################################################################################################################
+    # Collect baseline Data
+    all_data = {'type': 'baseline', 'conductance':conductance} 
+
+    for value in values:
+
+        # baseline torord model 
+        dat, IC = run_model([{conductance: value, 'i_kb_multiplier': i_kb}], 5)
+        t = dat['engine.time']
+        v = dat['membrane.v']
+        apd90s = []
+        results = []
+        for a in [0, 1, 2, 3, 4]:
+            ap_data = get_last_ap([t, v], a, type = 'half')
+            apd90s.append(calc_APD(ap_data['t'], ap_data['v'], 90))
+            results.append(detect_abnormal_ap(ap_data['t'], ap_data['v'])['result'])
+        all_data['t_'+str(value)] = str(list(t))
+        all_data['v_'+str(value)] = str(list(v))
+        all_data['apd90_'+str(value)] = str(apd90s)
+        all_data['result_'+str(value)] = str(results)
+
+    df_data.loc[len(df_data.index)] = list(all_data.values())
+
+    ##########################################################################################################################################################
+    # SAVE DATA
     df_data.to_csv(save_to, index = False)
 
 def get_rrc_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/rrc_data.csv.bz2', multiprocessing = 'no'):
