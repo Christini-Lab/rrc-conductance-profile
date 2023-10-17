@@ -453,23 +453,13 @@ def check_robustness(args):
 
     for value in values:
 
-        # baseline torord model 
-        #dat, IC = run_model([{conductance: value, 'i_kb_multiplier': i_kb}], 1)
-        #t = dat['engine.time']
-        #v = dat['membrane.v']
-        #apd90 = calc_APD(t, v, 90)
-        #data = detect_abnormal_ap(t, v)
-        #result = data['result']
-        #labels = ['conductance', 'value', 't', 'v', 'apd90', 'result', 'type']
-        #all_data.append(dict(zip(labels, [conductance_label, value, t, v, apd90, result, 'torord'])))
-
         # best ind
         best_ind = best_data.filter(like = 'multiplier').iloc[i].to_dict()
         best_ind['i_kb_multiplier'] = i_kb
         best_ind[conductance] = best_ind[conductance]*value
 
         try:
-            best_dat, best_IC = run_model([best_ind], 1)
+            best_dat, best_IC = run_model([best_ind], 5)
             t_best = best_dat['engine.time']
             v_best = best_dat['membrane.v']
             apd90s = []
