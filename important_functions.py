@@ -444,23 +444,24 @@ def check_robustness_old(best_data, conductance, values, i_kb = 1):
 def check_robustness(args):
     
     i, best_data, conductance, values, i_kb = args
-    all_data = []
+    all_data = {'type': 'optimized '+str(i)}
+
+    if i_kb != 1:
+        all_data['conductance'] = conductance + ' & i_kb_multiplier'
+    else:
+        all_data['conductance'] = conductance
 
     for value in values:
-        if i_kb != 1:
-            conductance_label = conductance + ' and i_kb_multiplier'
-        else:
-            conductance_label = conductance
 
         # baseline torord model 
-        dat, IC = run_model([{conductance: value, 'i_kb_multiplier': i_kb}], 1)
-        t = dat['engine.time']
-        v = dat['membrane.v']
-        apd90 = calc_APD(t, v, 90)
-        data = detect_abnormal_ap(t, v)
-        result = data['result']
-        labels = ['conductance', 'value', 't', 'v', 'apd90', 'result', 'type']
-        all_data.append(dict(zip(labels, [conductance_label, value, t, v, apd90, result, 'torord'])))
+        #dat, IC = run_model([{conductance: value, 'i_kb_multiplier': i_kb}], 1)
+        #t = dat['engine.time']
+        #v = dat['membrane.v']
+        #apd90 = calc_APD(t, v, 90)
+        #data = detect_abnormal_ap(t, v)
+        #result = data['result']
+        #labels = ['conductance', 'value', 't', 'v', 'apd90', 'result', 'type']
+        #all_data.append(dict(zip(labels, [conductance_label, value, t, v, apd90, result, 'torord'])))
 
         # best ind
         best_ind = best_data.filter(like = 'multiplier').iloc[i].to_dict()
@@ -474,10 +475,17 @@ def check_robustness(args):
             apd90_best = calc_APD(t_best, v_best, 90)
             data_best = detect_abnormal_ap(t_best, v_best)
             result_best = data_best['result']
-            all_data.append(dict(zip(labels, [conductance_label, value, t_best, v_best, apd90_best, result_best, 'optimized'+str(i)])))
-        except:
-            all_data.append(dict(zip(labels, [conductance_label, value, 500, 500, 500, 500, 'optimized'+str(i)])))
 
+            #save data to existing dict
+            all_data['t_'+str(value)] = str(list(t_best))
+            all_data['v_'+str(value)] = str(list(v_best))
+            all_data['apd90_'+str(value)] = apd90_best
+            all_data['result_'+str(value)] = result_best
+        except:
+            all_data['t_'+str(value)] = 500
+            all_data['v_'+str(value)] = 500
+            all_data['apd90_'+str(value)] = 500
+            all_data['result_'+str(value)] = 500
     return(all_data)
 
 def collect_rrc_data(args):
@@ -732,8 +740,8 @@ def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './da
     # LOAD DATA
     best_data = pd.read_csv(best_data_path) 
     best_conds = best_data.filter(like = 'multiplier')
-    best_conds.loc[len(best_conds)-1] = [1]*9 # add baseline as last row
-    best_conds = best_conds.sort_index().reset_index(drop=True)
+    best_conds.loc[len(best_conds)] = [1]*9 # add baseline as last row
+    #best_conds = best_conds.sort_index().reset_index(drop=True)
 
     ##########################################################################################################################################################
     # RUN SIMULATION
@@ -761,7 +769,6 @@ def get_robust_data(best_data_path = './data/best_data.csv.bz2', save_to = './da
     # SAVE DATA
     df_data = pd.DataFrame(result)
     df_data.to_csv(save_to, index = False)
-
 
 def get_rrc_data(best_data_path = './data/best_data.csv.bz2', save_to = './data/rrc_data.csv.bz2', multiprocessing = 'no'):
     """

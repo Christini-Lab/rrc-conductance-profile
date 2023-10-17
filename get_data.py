@@ -1,3 +1,4 @@
+
 #%%
 # IMPORT FUNCTIONS
 from important_functions import get_local_sensitivity, get_rrc_data, get_ind, get_robust_data
@@ -25,3 +26,4 @@ get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2
 
 #Robust data for all best data models - IKr 
 get_robust_data(conductance = 'i_kr_multiplier', values = [1, 0.8, 0.6, 0.4, 0.2, 0], multiprocessing='yes', save_to = './data/robust_data_ikr.csv.bz2')
+# %%
