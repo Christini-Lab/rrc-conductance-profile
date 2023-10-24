@@ -156,7 +156,7 @@ def check_physio(ap_features, feature_targets = {'Vm_peak': [10, 33, 55], 'dvdt_
 def get_rrc_error(RRC):
     # C3 Calculation
     #################### RRC DETECTION & ERROR CALCULATION ##########################
-    error = round((0.3 - (np.abs(RRC)))*20000)
+    error = round((1 - (np.abs(RRC)))*20000)
 
     return error
 
