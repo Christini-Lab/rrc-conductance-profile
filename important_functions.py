@@ -39,13 +39,13 @@ def run_model(ind, beats, stim = 5.3, stim_1 = 0, start = 0.1, start_1 = 0, leng
 
     return(dat, IC) 
 
-def rrc_search(ind, IC, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = './models/', model = 'tor_ord_endo2.mmt'):
+def rrc_search(ind, IC, max_rrc = 1, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = './models/', model = 'tor_ord_endo2.mmt'):
     all_data = []
     APs = list(range((10*cl)+int(start+length+4), (100*cl)+int(start+length+4), 5*cl)) #length needs to be an integer so it rounds if needed
 
     mod, proto = get_ind_data(ind, path, model) 
     proto.schedule(stim, start, length, cl, 0)
-    proto.schedule(0.3, (5*cl)+int(start+length+4), cl-int(start+length+4), cl, 1)
+    proto.schedule(max_rrc, (5*cl)+int(start+length+4), cl-int(start+length+4), cl, 1)
     sim = myokit.Simulation(mod, proto)
     sim.set_state(IC)
     dat = sim.run(7*cl)
@@ -56,7 +56,7 @@ def rrc_search(ind, IC, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = '
 
     d3 = get_last_ap(dat, 5, cl=cl)
     result_abnormal3 = detect_abnormal_ap(d3['t'], d3['v'])
-    all_data.append({**{'t_rrc': d3['t'], 'v_rrc': d3['v'], 'stim': 3}, **result_abnormal3})
+    all_data.append({**{'t_rrc': d3['t'], 'v_rrc': d3['v'], 'stim': max_rrc}, **result_abnormal3})
 
     #if result_EAD0 == 1 or result_RF0 == 1:
     if result_abnormal0['result'] == 1:
@@ -65,11 +65,11 @@ def rrc_search(ind, IC, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = '
     #elif result_EAD3 == 0 and result_RF3 == 0:
     elif result_abnormal3['result'] == 0:
         # no abnormality at 0.3 stim, return RRC
-        RRC = 0.3
+        RRC = max_rrc
 
     else:
         low = 0
-        high = 0.3
+        high = max_rrc
         for i in list(range(0,len(APs))):
             mid = round((low + (high-low)/2), 4) 
 
@@ -153,10 +153,10 @@ def check_physio(ap_features, feature_targets = {'Vm_peak': [10, 33, 55], 'dvdt_
 
     return(error)
 
-def get_rrc_error(RRC):
+def get_rrc_error(RRC, max_rrc = 1):
     # C3 Calculation
     #################### RRC DETECTION & ERROR CALCULATION ##########################
-    error = round((1 - (np.abs(RRC)))*20000)
+    error = round((max_rrc - (np.abs(RRC)))*20000)
 
     return error
 
