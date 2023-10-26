@@ -39,7 +39,7 @@ def run_model(ind, beats, stim = 5.3, stim_1 = 0, start = 0.1, start_1 = 0, leng
 
     return(dat, IC) 
 
-def rrc_search(ind, IC, max_rrc = 1, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = './models/', model = 'tor_ord_endo2.mmt'):
+def rrc_search_old(ind, IC, max_rrc = 1, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = './models/', model = 'tor_ord_endo2.mmt'):
     all_data = []
     APs = list(range((10*cl)+int(start+length+4), (100*cl)+int(start+length+4), 5*cl)) #length needs to be an integer so it rounds if needed
 
@@ -94,6 +94,70 @@ def rrc_search(ind, IC, max_rrc = 1, stim = 5.3, start = 0.2, length = 1, cl = 1
             #if (high-low)<0.01:
             if (high-low)<0.0025: #THIS WAS USED IN GA 8 AND BEFORE
                 break 
+        
+        for i in list(range(1, len(all_data))):
+            if all_data[-i]['result'] == 0:
+                RRC = all_data[-i]['stim']
+                break
+            else:
+                RRC = 0 #in this case there would be no stim without an RA
+
+    result = {'RRC':RRC, 'data':all_data}
+
+    return(result)
+
+def rrc_search(ind, IC, max_rrc = 1, stim = 5.3, start = 0.2, length = 1, cl = 1000, path = './models/', model = 'tor_ord_endo2.mmt'):
+    all_data = []
+
+    mod, proto = get_ind_data(ind, path, model) 
+    proto.schedule(stim, start, length, cl, 0)
+    proto.schedule(max_rrc, (5*cl)+int(start+length+4), cl-int(start+length+4), cl, 1)
+    sim = myokit.Simulation(mod, proto)
+    sim.set_state(IC)
+    dat = sim.run(7*cl)
+
+    d0 = get_last_ap(dat, 4, cl=cl)
+    result_abnormal0 = detect_abnormal_ap(d0['t'], d0['v']) 
+    all_data.append({**{'t_rrc': d0['t'], 'v_rrc': d0['v'], 'stim': 0}, **result_abnormal0})
+
+    d3 = get_last_ap(dat, 5, cl=cl)
+    result_abnormal3 = detect_abnormal_ap(d3['t'], d3['v'])
+    all_data.append({**{'t_rrc': d3['t'], 'v_rrc': d3['v'], 'stim': max_rrc}, **result_abnormal3})
+
+    #if result_EAD0 == 1 or result_RF0 == 1:
+    if result_abnormal0['result'] == 1:
+        RRC = 0
+
+    #elif result_EAD3 == 0 and result_RF3 == 0:
+    elif result_abnormal3['result'] == 0:
+        # no abnormality at 0.3 stim, return RRC
+        RRC = max_rrc
+
+    else:
+        low = 0
+        high = max_rrc
+        while (high-low)>0.0025:
+            mid = round((low + (high-low)/2), 4) 
+
+            mod, proto = get_ind_data(ind, path, model)  #added
+            proto.schedule(stim, start, length, cl, 0) #added
+            proto.schedule(mid, (5*cl)+int(start+length+4), cl-int(start+length+4), cl, 1)
+            sim = myokit.Simulation(mod, proto)
+            sim.set_state(IC) #added
+            dat = sim.run(7*cl) #added
+
+            data = get_last_ap(dat, 5, cl=cl)
+            result_abnormal = detect_abnormal_ap(data['t'], data['v'])
+            all_data.append({**{'t_rrc': data['t'], 'v_rrc': data['v'], 'stim': mid}, **result_abnormal})
+            
+            if result_abnormal['result'] == 0:
+                # no RA so go from mid to high
+                low = mid
+
+            else:
+                #repolarization failure so go from mid to low 
+                high = mid
+
         
         for i in list(range(1, len(all_data))):
             if all_data[-i]['result'] == 0:
