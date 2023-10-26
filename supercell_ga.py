@@ -236,6 +236,7 @@ def _evaluate_fitness(ind):
         AP_morph_error = check_physio_torord(data['t'], data['v'], filter = 'yes')
         all_morph_errors.append(AP_morph_error['error'])
 
+    print(ind)
     results = rrc_search(ind, IC, path = GA_CONFIG.path_to_model, model = GA_CONFIG.model) 
     RRC = results['RRC']
 
