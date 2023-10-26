@@ -238,6 +238,7 @@ def _evaluate_fitness(ind):
 
     print(ind)
     results = rrc_search(ind, IC, path = GA_CONFIG.path_to_model, model = GA_CONFIG.model) 
+    print('Finished rrc search')
     RRC = results['RRC']
 
     rrc_fitness = get_rrc_error(RRC)
