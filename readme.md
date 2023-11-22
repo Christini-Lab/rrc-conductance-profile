@@ -1,4 +1,6 @@
 ## Optimization of a Cardiomyocyte Model Illuminates Role of Increased INaL in Repolarization Reserve
+[![DOI](https://zenodo.org/badge/685643247.svg)](https://zenodo.org/doi/10.5281/zenodo.10198888)
+
 By: Kristin Fullerton, Alexander P. Clark, Trine Krogh-Madsen, David J. Christini
 
 **supercell_ga.py** - Python script containing the classes and functions for the developed genetic algorithm.
